@@ -1,0 +1,54 @@
+version: "3.2"
+
+services:
+  phpmyadmin:
+    restart: unless-stopped
+    image: phpmyadmin/phpmyadmin:latest
+    container_name: phpmyadmin_app
+    expose:
+      - "80"
+    links:
+      - mysqldb
+    ports:
+      - "85:80"
+    environment:
+      - PMA_ARBITRARY=1
+    networks:
+      - default
+
+  mysqldb:
+    restart: unless-stopped
+    image: mariadb
+    container_name: db-mysql
+    expose:
+        - "3306"
+    ports:
+        - "3307:3306"
+    volumes:
+      - DATA_MYSQL:/var/lib/mysql
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    environment:
+      - MYSQL_ROOT_PASSWORD=123456
+    networks:
+      - default
+  
+  php: 
+    restart: unless-stopped
+    build: ./www
+    container_name: apache-php-server
+    expose:
+      - "80"
+    links:
+      - mysqldb
+    ports:
+      - "8080:80"
+    networks:
+      - default 
+  
+volumes:
+  DATA_MYSQL: {}  
+  
+networks:
+  default:
+    ipam:
+      driver: default
