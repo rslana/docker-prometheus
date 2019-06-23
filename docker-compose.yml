@@ -1,6 +1,39 @@
 version: "3.2"
 
 services:
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    ports:
+      - 9090:9090
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    depends_on:
+      - cadvisor
+  cadvisor:
+    image: google/cadvisor:latest
+    container_name: cadvisor
+    ports:
+      - "8081:8080"
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:rw
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+    depends_on:
+      - redis
+      - phpmyadmin
+      - mysqldb
+      - php
+
+  # redis:
+  #   image: redis:latest
+  #   container_name: redis
+  #   ports:
+  #     - 6379:6379
+
   phpmyadmin:
     restart: unless-stopped
     image: phpmyadmin/phpmyadmin:latest
@@ -21,9 +54,9 @@ services:
     image: mariadb
     container_name: db-mysql
     expose:
-        - "3306"
+      - "3306"
     ports:
-        - "3307:3306"
+      - "3307:3306"
     volumes:
       - DATA_MYSQL:/var/lib/mysql
       - /var/run/docker.sock:/var/run/docker.sock:ro
@@ -31,8 +64,8 @@ services:
       - MYSQL_ROOT_PASSWORD=123456
     networks:
       - default
-  
-  php: 
+
+  php:
     restart: unless-stopped
     build: ./www
     container_name: apache-php-server
@@ -43,11 +76,11 @@ services:
     ports:
       - "8080:80"
     networks:
-      - default 
-  
+      - default
+
 volumes:
-  DATA_MYSQL: {}  
-  
+  DATA_MYSQL: {}
+
 networks:
   default:
     ipam:
